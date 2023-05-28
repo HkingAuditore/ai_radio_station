@@ -1,37 +1,44 @@
 import os
 import random
+import threading
+import time
 
 import pyaudio as pyaudio
 import pygame
 from pathlib import Path
+import simpleaudio
+from pydub.playback import _play_with_simpleaudio
 
 from pydub import AudioSegment
 from pydub.playback import play
+import librosa
+from radiosoundfile import RadioSoundFile, Music
 
 import PATH
 
 
-def scan_music(path):
-    music = []
-    for (_, _, files) in os.walk(path, topdown=True):
-        music.append(files)
-    return music
+
+
+def init_pydub():
+    AudioSegment.converter = "ffmpeg.exe"
+    AudioSegment.ffprobe = "ffprobe.exe"
 
 
 if __name__ == '__main__':
-    print(AudioSegment.ffmpeg)
-    AudioSegment.converter = r"F:\\Developent\\AI\\AIRadio\\ai_radio_station\\ffmpeg-2023-05-25-git-944243477b-full_build\\bin\\ffmpeg.exe"
-    AudioSegment.ffprobe = r"F:\\Developent\\AI\\AIRadio\\ai_radio_station\\ffmpeg-2023-05-25-git-944243477b-full_build\\bin\\ffprobe.exe"
-    print(AudioSegment.ffmpeg)
-    music_list = scan_music(PATH.MUSIC_PATH)
-    path0 = os.path.join(PATH.MUSIC_PATH, random.choice(music_list[0]))
-    path1 = os.path.join(PATH.MUSIC_PATH, random.choice(music_list[0]))
-    path2 = os.path.join(PATH.MUSIC_PATH, random.choice(music_list[0]))
-    print(path0)
-    my_file = Path("F:\\Developent\\AI\\AIRadio\\Music\\01 - Victoria III (Official Game Soundtrack) - A Prospering Country.mp3")
-    song = AudioSegment.from_mp3(my_file)
+    init_pydub()
 
-    play(song)
+    song = Music(RadioSoundFile.get_random_sound_path('music'))
+    dj = Music(song.intro,use_intro=False)
+
+    stream = song.audio.fade_in(2000).fade_out(3000)
+
+    mixed = stream.overlay(dj.audio.fade_in(1000).fade_out(1000) - 5, position=5000, gain_during_overlay=-8)
+
+    t = threading.Thread(target=play, args=(mixed,), daemon=True)
+    t.start()
+    print(1)
+    t.join()
+    print(2)
 
     # pygame.mixer.pre_init()
     # pygame.mixer.init()
