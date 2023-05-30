@@ -1,5 +1,6 @@
 import os
 import random
+import re
 
 import librosa
 from pydub import AudioSegment
@@ -45,8 +46,9 @@ class RadioSoundFile:
 class Music:
     def __init__(self, path, use_intro=True):
         self.path = path
+        self.name = re.findall(r'(?<=\\)(?<!\.)[^\\]*?(?=\.)', self.path)[-1]
         self.audio = RadioSoundFile.get_sound(path)
-        self.name =
+
         if use_intro:
             y, sr = librosa.load(self.path)
             tempo, beat_frames = librosa.beat.beat_track(y=y, sr=sr)
